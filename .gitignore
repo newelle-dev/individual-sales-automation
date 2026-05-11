@@ -6,3 +6,4 @@ __pycache__/
 output/
 input/*.csv
 !input/.gitkeep
+.github/skills

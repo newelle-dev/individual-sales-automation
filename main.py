@@ -11,6 +11,12 @@ def process_files(input_dir, output_file):
     dept_stylists = defaultdict(set)
     stylist_manager = StylistManager(STYLIST_GROUPS)
     
+    # Prepopulate `dept_stylists` with all stylists from STYLIST_GROUPS
+    # so stylists with zero transactions still appear in the output.
+    for dept, stylists in STYLIST_GROUPS.items():
+        for s in stylists:
+            d, short_name = stylist_manager.get_info(s)
+            dept_stylists[d].add(short_name)
     # Track the month name from the data
     month_name = "MONTH"
 

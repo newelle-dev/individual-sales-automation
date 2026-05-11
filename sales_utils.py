@@ -44,12 +44,17 @@ class StylistManager:
             
         clean_raw = self._clean(raw_name)
         
+        # Keep Angel Assist rows in HS instead of matching Angela by substring.
+        if 'angelassist' in clean_raw:
+            return 'HS', 'Angel'
+
         # Specific alias check (as seen in original code)
         if 'nicky' in clean_raw:
             return 'HS', 'Yin Voon Hao'
 
-        # Check for direct matches in our lookup
-        for clean_target, (dept, original_name) in self.lookup.items():
+        # Check for direct matches in our lookup, longest names first to avoid substring conflicts
+        sorted_lookup = sorted(self.lookup.items(), key=lambda x: len(x[0]), reverse=True)
+        for clean_target, (dept, original_name) in sorted_lookup:
             if clean_target in clean_raw:
                 return dept, original_name
         
