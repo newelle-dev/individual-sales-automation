@@ -1,0 +1,5 @@
+# Project dependencies
+# Currently the project uses standard libraries (csv, os, glob, collections, datetime)
+# Add external libraries below as needed, for example:
+# pandas
+# openpyxl
