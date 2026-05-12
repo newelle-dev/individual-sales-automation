@@ -122,7 +122,7 @@ def process_files(input_dir, output_file):
                     for s in present_stylists:
                         val = data[dept][sale_type][day][s]
                         # Handling negative values by clipping to 0
-                        row.append(f"RM{max(0.0, val):.2f}")
+                        row.append(f"{max(0.0, val):.2f}")
                     writer.writerow(row)
                 
                 writer.writerow([]) # Blank line between sections
