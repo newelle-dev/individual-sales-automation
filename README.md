@@ -42,6 +42,15 @@ This project automates the processing and aggregation of stylist sales data expo
    ```
 3. **View Results**: The processed report will be saved as `output/stylist_sales_pivot.csv`.
 
+### One-Click Option for Non-Technical Users (Windows)
+
+1. Put all CSV exports into the `input/` folder.
+2. Double-click `Run Report.bat` in the project root.
+3. Wait for the success message.
+4. Open `output/stylist_sales_pivot.csv`.
+
+If Python is not installed, the runner will show a message with the download link.
+
 ## Project Structure
 
 - `main.py`: The entry point of the application; handles file processing and report generation.
