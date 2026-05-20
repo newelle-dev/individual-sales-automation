@@ -64,10 +64,10 @@ def process_files(input_dir, output_file):
                 dept_stylists[dept].add(short_name)
 
                 if parsed['is_service_detail']:
-                    # For Service Detail files, only add to Deductions for non-HS groups
-                    # (Avoids double-counting sales and respects the HS group exclusion)
-                    if dept != 'HS':
-                        data[dept]['Deductions'][day][short_name] += parsed['deduction']
+                    # For Service Detail files, add the 'actual value' to Deductions
+                    # so that: service-detail actuals + received-detail deductions
+                    # produce the final deduction sales per stylist.
+                    data[dept]['Deductions'][day][short_name] += parsed['deduction']
                 else:
                     # Normal processing for Received Detail files
                     if parsed['category']:
