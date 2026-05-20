@@ -6,4 +6,10 @@ __pycache__/
 output/
 input/*.csv
 !input/.gitkeep
+.gitkeep
+.vscode/
+# reports folder isolation
+reports\input/*.csv
+!reports\input/.gitkeep
+reports\output/
 .github/skills
