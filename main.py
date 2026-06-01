@@ -67,7 +67,10 @@ def process_files(input_dir, output_file):
                     # For Service Detail files, add the 'actual value' to Deductions
                     # so that: service-detail actuals + received-detail deductions
                     # produce the final deduction sales per stylist.
-                    data[dept]['Deductions'][day][short_name] += parsed['deduction']
+                    deduction = parsed['deduction']
+                    if parsed.get('qty') == 0.5:
+                        deduction *= 2
+                    data[dept]['Deductions'][day][short_name] += deduction
                 else:
                     # Normal processing for Received Detail files
                     if parsed['category']:

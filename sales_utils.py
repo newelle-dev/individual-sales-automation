@@ -64,6 +64,7 @@ def parse_sales_row(row):
     """Parses a single CSV row and returns a dictionary of data."""
     try:
         is_service_detail = False
+        qty_val = None
         if len(row) >= 14:
             # Format 1: Employee Received Detail
             date_str = row[COL_DATE]
@@ -83,6 +84,7 @@ def parse_sales_row(row):
             try:
                 nett_val = float(row[11])
                 deduction_val = float(row[12])
+                qty_val = float(row[9])
             except ValueError:
                 return None
             is_service_detail = True
@@ -116,6 +118,7 @@ def parse_sales_row(row):
             'category': category,
             'nett': nett_val,
             'deduction': deduction_val,
+            'qty': qty_val,
             'is_service_detail': is_service_detail
         }
     except Exception:
