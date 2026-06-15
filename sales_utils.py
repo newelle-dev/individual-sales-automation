@@ -100,12 +100,15 @@ def parse_sales_row(row):
         # Determine category
         category = None
         if not is_service_detail:
+            item_lower = item_name.lower()
             if sale_type_code == 'S':
                 category = 'A la carte sales'
             elif sale_type_code == 'P':
                 category = 'Product sales'
             elif sale_type_code in ['G', 'C']:
-                if nett_val < 0:
+                if 'promo' in item_lower:
+                    category = None
+                elif nett_val < 0:
                     category = 'A la carte sales'
                 else:
                     category = 'Package sales'

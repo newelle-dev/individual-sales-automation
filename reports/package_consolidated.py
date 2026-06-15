@@ -48,17 +48,40 @@ def process_package_totals(input_dir=INPUT_DIR, output_file=OUTPUT_FILE):
                 if row[0] == '#' or 'Total' in row or row[0] == 'Date':
                     continue
 
+                if len(row) < 8:
+                    continue
+
+                sale_type = row[6].strip().upper()
+                if sale_type not in {'C', 'G'}:
+                    continue
+
+                try:
+                    raw_qty = float(row[7].strip())
+                except ValueError:
+                    continue
+
+                # Exclude reversed/void entries marked with -1
+                if raw_qty == -1:
+                    continue
+
+                # Exclude items that are promotions (case-insensitive)
+                item_name = row[5].strip().lower() if len(row) > 5 else ''
+                if 'promo' in item_name:
+                    continue
+
                 parsed = parse_sales_row(row)
                 if not parsed or not current_stylist:
                     continue
 
-                # We're only interested in Package sales (includes coupon/G or C codes as parsed)
-                if parsed.get('category') != 'Package sales':
+                # Skip rows where the parsed quantity is -1 (explicit exclusion)
+                parsed_qty = parsed.get('qty')
+                if parsed_qty is not None and parsed_qty == -1:
                     continue
 
                 dept, short_name = stylist_manager.get_info(current_stylist)
 
-                qty = 1
+                # Use the actual positive quantity when available (exclude negatives)
+                qty = raw_qty if raw_qty > 0 else (parsed_qty if parsed_qty and parsed_qty > 0 else 0)
                 sales_val = max(0.0, parsed.get('nett', 0.0))
 
                 totals[dept][short_name]['qty'] += qty
@@ -75,7 +98,7 @@ def process_package_totals(input_dir=INPUT_DIR, output_file=OUTPUT_FILE):
     with open(output_file, mode='w', encoding='utf-8', newline='') as f:
         writer = csv.writer(f)
 
-        writer.writerow(["FINAL CONSOLIDATED (Package + Coupon)"])
+        writer.writerow(["FINAL CONSOLIDATED (C + G, Qty 1)"])
 
         grand_total_qty = 0
         grand_total_sales = 0.0
