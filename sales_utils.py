@@ -11,10 +11,10 @@ COL_DEDUCTION = 13
 STYLIST_GROUPS = {
     'HS': [
         'Nick', 'Sven', 'Yin Voon Hao', 'Steve', 'Phillip', 'Hellen', 'Tyra', 'Nicholas', 'Mayble', 
-        'Kenny', 'Jade', 'Wei Xin', 'Kelvin', 'Gino', 'Angel', 'Moon', 'Daniel', 'Ella', 'Sedra', 'Rain', 'Carmen'
+        'Kenny', 'Jade', 'Wei Xin', 'Kelvin', 'Gino', 'Moon', 'Daniel', 'Ella', 'Sedra', 'Rain', 'Carmen'
     ],
     'Nails': [
-        'JEE', 'EVELYN', 'JESSY', 'ROI ROI', 'GRACE', 'JAY', 'JINGWEN', 'AGNES', 'Kalpana', 'Sharon'
+        'JEE', 'JESSY', 'ROI ROI', 'GRACE', 'JAY', 'JINGWEN', 'AGNES', 'Sharon'
     ],
     'L&A': [
         'DAISY', 'ALICE', 'YY', 'MOEMOE', 'WINNIE', 'NINI', 'ANGELA', 'JESSIE', 'NAOMI'
@@ -43,10 +43,6 @@ class StylistManager:
             return 'Other', 'Unknown'
             
         clean_raw = self._clean(raw_name)
-        
-        # Keep Angel Assist rows in HS instead of matching Angela by substring.
-        if 'angelassist' in clean_raw:
-            return 'HS', 'Angel'
 
         # Specific alias check (as seen in original code)
         if 'nicky' in clean_raw:
