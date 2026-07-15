@@ -2,11 +2,8 @@ import csv
 from datetime import datetime
 
 # CSV Column Indices
-COL_DATE = 1
-COL_ITEM = 5
-COL_SALE_TYPE = 6
-COL_NETT = 12
-COL_DEDUCTION = 13
+# CSV Column Indices are no longer static constants because the layout varies between reports.
+# They are determined dynamically inside parse_sales_row.
 
 STYLIST_GROUPS = {
     'HS': [
@@ -61,35 +58,61 @@ def parse_sales_row(row):
     try:
         is_service_detail = False
         qty_val = None
-        if len(row) >= 14:
-            # Format 1: Employee Received Detail
-            date_str = row[COL_DATE]
-            item_name = row[COL_ITEM]
-            sale_type_code = row[COL_SALE_TYPE]
-            try:
-                nett_val = float(row[COL_NETT])
-                deduction_val = float(row[COL_DEDUCTION])
-            except ValueError:
-                return None
+        sale_type_code = None
+
+        if len(row) == 15:
+            # Format 1: Employee Received Detail (Split Columns)
+            # Columns: #, Date, Reference No., Employee, Customer, Item Code, Item Name, Type, Qty, Total, Received, Tax, Charge, Nett, Deduction
+            date_str = row[1]
+            item_name = row[6]
+            sale_type_code = row[7]
+            qty_val = float(row[8])
+            nett_val = float(row[13])
+            deduction_val = float(row[14])
+
+        elif len(row) == 14:
+            # Check if row[0] is Date or Index.
+            # Format 2 (Service Detail, Split Columns) starts with Date: e.g. "10-07-2026 10:55 AM"
+            # Format 1 (Received Detail, Combined Column) starts with index: e.g. "1" or ""
+            is_service = False
+            if row[0] and row[0].strip() and row[0].strip()[0].isdigit() and '-' in row[0]:
+                is_service = True
+            
+            if is_service:
+                # Format 2: Employee Service Detail (Split Columns)
+                # Columns: Date, Reference No., Employee, Customer, Item Code, Item Name, Section, Category, Prepaid, FOC, Qty, Duration (Mins), Value, Actual Value
+                date_str = row[0]
+                item_name = row[5]
+                qty_val = float(row[10])
+                nett_val = float(row[12])
+                deduction_val = float(row[13])
+                is_service_detail = True
+            else:
+                # Format 1: Employee Received Detail (Combined Column)
+                # Columns: #, Date, Reference No., Employee, Customer, Item, Type, Qty, Total, Received, Tax, Charge, Nett, Deduction
+                date_str = row[1]
+                item_name = row[5]
+                sale_type_code = row[6]
+                qty_val = float(row[7])
+                nett_val = float(row[12])
+                deduction_val = float(row[13])
+
         elif len(row) == 13:
-            # Format 2: Employee Service Detail
-            # Date(0), Ref(1), Emp(2), Cust(3), Item(4), Section(5), Cat(6), Prepaid(7), FOC(8), Qty(9), Dur(10), Val(11), Actual(12)
+            # Format 2: Employee Service Detail (Combined Column)
+            # Columns: Date, Reference No., Employee, Customer, Item, Section, Category, Prepaid, FOC, Qty, Duration (Mins), Value, Actual Value
             date_str = row[0]
             item_name = row[4]
-            sale_type_code = None # Not present in this format
-            try:
-                nett_val = float(row[11])
-                deduction_val = float(row[12])
-                qty_val = float(row[9])
-            except ValueError:
-                return None
+            qty_val = float(row[9])
+            nett_val = float(row[11])
+            deduction_val = float(row[12])
             is_service_detail = True
+
         else:
             return None
 
         # Parse date
         try:
-            date_obj = datetime.strptime(date_str, "%d-%m-%Y %I:%M %p")
+            date_obj = datetime.strptime(date_str.strip(), "%d-%m-%Y %I:%M %p")
         except ValueError:
             return None
 
@@ -114,6 +137,7 @@ def parse_sales_row(row):
         return {
             'date': date_obj,
             'item_name': item_name,
+            'sale_type': sale_type_code,
             'category': category,
             'nett': nett_val,
             'deduction': deduction_val,
@@ -122,4 +146,5 @@ def parse_sales_row(row):
         }
     except Exception:
         return None
+
 
