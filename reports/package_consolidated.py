@@ -48,40 +48,25 @@ def process_package_totals(input_dir=INPUT_DIR, output_file=OUTPUT_FILE):
                 if row[0] == '#' or 'Total' in row or row[0] == 'Date':
                     continue
 
-                if len(row) < 8:
-                    continue
-
-                sale_type = row[6].strip().upper()
-                if sale_type not in {'C', 'G'}:
-                    continue
-
-                try:
-                    raw_qty = float(row[7].strip())
-                except ValueError:
-                    continue
-
-                # Exclude reversed/void entries marked with -1
-                if raw_qty == -1:
-                    continue
-
-                # Exclude items that are promotions (case-insensitive)
-                item_name = row[5].strip().lower() if len(row) > 5 else ''
-                if 'promo' in item_name:
-                    continue
-
                 parsed = parse_sales_row(row)
                 if not parsed or not current_stylist:
                     continue
 
-                # Skip rows where the parsed quantity is -1 (explicit exclusion)
-                parsed_qty = parsed.get('qty')
-                if parsed_qty is not None and parsed_qty == -1:
+                sale_type = parsed.get('sale_type')
+                if not sale_type or sale_type.strip().upper() not in {'C', 'G'}:
+                    continue
+
+                qty = parsed.get('qty')
+                # Exclude reversed/void entries (<= 0)
+                if qty is None or qty <= 0:
+                    continue
+
+                # Exclude items that are promotions (case-insensitive)
+                item_name = parsed.get('item_name', '').strip().lower()
+                if 'promo' in item_name:
                     continue
 
                 dept, short_name = stylist_manager.get_info(current_stylist)
-
-                # Use the actual positive quantity when available (exclude negatives)
-                qty = raw_qty if raw_qty > 0 else (parsed_qty if parsed_qty and parsed_qty > 0 else 0)
                 sales_val = max(0.0, parsed.get('nett', 0.0))
 
                 totals[dept][short_name]['qty'] += qty
