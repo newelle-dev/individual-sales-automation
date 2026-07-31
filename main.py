@@ -63,6 +63,9 @@ def process_files(input_dir, output_file):
                 dept, short_name = stylist_manager.get_info(current_stylist)
                 dept_stylists[dept].add(short_name)
 
+                item_lower = parsed.get('item_name', '').lower()
+                is_176_makeover = '176 makeover' in item_lower
+
                 if parsed['is_service_detail']:
                     # For Service Detail files, add the 'actual value' to Deductions
                     # so that: service-detail actuals + received-detail deductions
@@ -70,14 +73,22 @@ def process_files(input_dir, output_file):
                     deduction = parsed['deduction']
                     if parsed.get('qty') == 0.5:
                         deduction *= 2
-                    data[dept]['Deductions'][day][short_name] += deduction
+                    
+                    if is_176_makeover:
+                        data[dept]['A la carte sales'][day][short_name] += deduction
+                    else:
+                        data[dept]['Deductions'][day][short_name] += deduction
                 else:
                     # Normal processing for Received Detail files
                     if parsed['category']:
-                        data[dept][parsed['category']][day][short_name] += parsed['nett']
+                        if is_176_makeover:
+                            data[dept][parsed['category']][day][short_name] += (parsed['nett'] + parsed['deduction'])
+                        else:
+                            data[dept][parsed['category']][day][short_name] += parsed['nett']
                     
                     # Aggregate Deductions
-                    data[dept]['Deductions'][day][short_name] += parsed['deduction']
+                    if not is_176_makeover:
+                        data[dept]['Deductions'][day][short_name] += parsed['deduction']
 
 
 
