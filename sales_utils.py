@@ -125,7 +125,9 @@ def parse_sales_row(row):
             elif sale_type_code == 'P':
                 category = 'Product sales'
             elif sale_type_code in ['G', 'C']:
-                if 'promo' in item_lower:
+                if 'makeover' in item_lower:
+                    category = 'A la carte sales'
+                elif 'promo' in item_lower:
                     category = None
                 elif nett_val < 0:
                     category = 'A la carte sales'
