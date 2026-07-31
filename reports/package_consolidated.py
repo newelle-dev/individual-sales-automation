@@ -11,6 +11,8 @@ if ROOT_DIR not in sys.path:
 
 from sales_utils import STYLIST_GROUPS, StylistManager, parse_sales_row
 
+QTY_EXCLUDED_CODES = {'RBD', 'RM10', 'RM50', 'C01044', 'CP07'}
+
 INPUT_DIR = os.path.join(os.path.dirname(__file__), "input")
 OUTPUT_FILE = os.path.join(os.path.dirname(__file__), "output", "package_consolidated_by_group.csv")
 
@@ -61,15 +63,15 @@ def process_package_totals(input_dir=INPUT_DIR, output_file=OUTPUT_FILE):
                 if qty is None or qty <= 0:
                     continue
 
-                # Exclude items that are promotions (case-insensitive)
-                item_name = parsed.get('item_name', '').strip().lower()
-                if 'promo' in item_name:
-                    continue
-
+                raw_item_name = parsed.get('item_name', '').strip()
                 dept, short_name = stylist_manager.get_info(current_stylist)
                 sales_val = max(0.0, parsed.get('nett', 0.0))
 
-                totals[dept][short_name]['qty'] += qty
+                # Exclude specified vouchers/redemptions from Qty calculation
+                item_code = raw_item_name.split(':')[0].strip().upper()
+                if item_code not in QTY_EXCLUDED_CODES:
+                    totals[dept][short_name]['qty'] += qty
+
                 totals[dept][short_name]['sales'] += sales_val
 
     # Ensure all stylists from groups are present so zeros show up
