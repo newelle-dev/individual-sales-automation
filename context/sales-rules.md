@@ -76,12 +76,14 @@ If a service detail row contains a quantity (`qty`) of exactly `0.5`, the deduct
 
 ## 7. Package Consolidated Report Rules (`package_consolidated.py`)
 For the isolated package totals report:
-*   Only processes items with type code `'C'` or `'G'`.
-*   Excludes any records where the quantity (`qty`) is less than or equal to `0` (voids/reversals).
+*   **Department Filtering**: Only processes and displays stylists in the **HS** (Hair Stylists) department.
+*   **Monthly & Package Breakdown**: Groups transactions per month for each HS stylist, separating **Credit Package** (`'C'`) and **Treatment Package** (`'G'`).
+*   **Excluded Voids/Reversals**: Excludes any records where the quantity (`qty`) is less than or equal to `0`.
 *   **Quantity-Excluded Vouchers**: Certain item codes are excluded from the aggregated quantity count (though their sales values are still summed):
     *   `RBD`
     *   `RM10`
     *   `RM50`
     *   `C01044`
     *   `CP07`
-*   **Ranking**: Ranks stylists by sales descending within each department, displaying individual rank, quantity, and total sales value.
+*   **Ranking**: Ranks HS stylists by total sales descending for each month, displaying the **Top 7 stylists**, Credit Package Qty & Sales (RM), Treatment Package Qty & Sales (RM), and Combined Total Qty & Sales (RM).
+

@@ -11,7 +11,7 @@ set PYTHONPATH=%PROJECT_ROOT%
 echo ======================================
 echo   Package Consolidated Report Runner
 echo ======================================
-echo.
+echo(
 
 set IN_DIR=%REPORTS_DIR%input
 set OUT_DIR=%REPORTS_DIR%output
@@ -31,7 +31,7 @@ if errorlevel 1 (
 
 if not exist "%IN_DIR%" (
     echo [ERROR] Input directory '%IN_DIR%' missing.
-    echo.
+    echo(
     pause
     exit /b 1
 )
@@ -40,7 +40,7 @@ dir /b "%IN_DIR%\*.csv" >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] No CSV files found in '%IN_DIR%'.
     echo Please place Wessconnect export CSVs in 'reports\input\' or root 'input\' and try again.
-    echo.
+    echo(
     pause
     exit /b 1
 )
@@ -65,7 +65,7 @@ if exist "%PROJECT_ROOT%\.venv\Scripts\python.exe" (
 if "%PYTHON_CMD%"=="" (
     echo [ERROR] Python was not found on this computer.
     echo Please install Python 3.8+.
-    echo.
+    echo(
     pause
     exit /b 1
 )
@@ -73,18 +73,18 @@ if "%PYTHON_CMD%"=="" (
 %PYTHON_CMD% -u "%REPORTS_DIR%package_consolidated.py" "%IN_DIR%" "%OUT_FILE%"
 
 if %errorlevel% neq 0 (
-    echo.
+    echo(
     echo [ERROR] Report generation failed (Exit code: %errorlevel%).
-    echo.
+    echo(
     pause
     exit /b %errorlevel%
 )
 
-echo.
+echo(
 echo ======================================
 echo   [SUCCESS] Package Report Generated!
 echo   Output: %OUT_FILE%
 echo ======================================
-echo.
-pause
+echo(
 endlocal
+

@@ -11,3 +11,4 @@ Reading Order:
 5. '/context/sales-rules.md'
 
 Once you have read these files, acknowledge that you understand.
+Don't forget to update necessary documents (e.g README.md, requirements, architecture, code-standards, ai-workflow-rules, sales-rules etc.) as we go.

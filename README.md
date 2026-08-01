@@ -59,7 +59,7 @@ If Python is not installed, the runner will show a message with the download lin
 - `output/`: Directory for generated reports (ignored by Git).
 - `.venv/`: Python virtual environment (ignored by Git).
  - `reports/`: Additional report scripts and helpers. Contains its own `input/` and `output/` so reports can be run in isolation.
-   - `reports/package_consolidated.py`: Script that produces a consolidated Package+Coupon report grouped by department.
+   - `reports/package_consolidated.py`: Script that produces a consolidated Monthly Package report for the HS department (separating Credit and Treatment packages).
    - `reports/input/`: Place CSVs here if you want the `reports` script to run against an isolated set of inputs.
    - `reports/output/`: Generated report(s) from the `reports` script.
    - `reports/run_report.bat`: Windows helper to run the `package_consolidated` report quickly.
