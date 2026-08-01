@@ -1,15 +1,15 @@
 import csv
+import glob
 import os
 import sys
-import glob
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 
 # Ensure project root is on sys.path so imports work when running this file directly
 ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
-from sales_utils import STYLIST_GROUPS, StylistManager, parse_sales_row
+from sales_utils import STYLIST_GROUPS, StylistManager, iter_sales_records
 
 QTY_EXCLUDED_CODES = {'RBD', 'RM10', 'RM50', 'C01044', 'CP07'}
 
@@ -17,62 +17,40 @@ INPUT_DIR = os.path.join(os.path.dirname(__file__), "input")
 OUTPUT_FILE = os.path.join(os.path.dirname(__file__), "output", "package_consolidated_by_group.csv")
 
 
-def process_package_totals(input_dir=INPUT_DIR, output_file=OUTPUT_FILE):
-    totals = defaultdict(lambda: defaultdict(lambda: {'qty': 0, 'sales': 0.0}))
-    stylist_manager = StylistManager(STYLIST_GROUPS)
-
+def process_package_totals(input_dir: str = INPUT_DIR, output_file: str = OUTPUT_FILE) -> None:
+    """
+    Processes CSV records and generates a consolidated Package + Coupon sales report.
+    """
     csv_files = glob.glob(os.path.join(input_dir, "*.csv"))
     if not csv_files:
-        print(f"No CSV files found in {input_dir}")
-        return
+        print(f"[ERROR] No CSV files found in input directory '{input_dir}'")
+        sys.exit(1)
 
-    for file_path in csv_files:
-        with open(file_path, mode='r', encoding='utf-8') as f:
-            reader = csv.reader(f)
-            current_stylist = None
+    totals = defaultdict(lambda: defaultdict(lambda: {'qty': 0, 'sales': 0.0}))
+    stylist_manager = StylistManager(STYLIST_GROUPS)
+    record_count = 0
 
-            for row in reader:
-                if not row or not any(row):
-                    continue
+    for current_stylist, parsed in iter_sales_records(input_dir):
+        sale_type = parsed.get('sale_type')
+        if not sale_type or sale_type.strip().upper() not in {'C', 'G'}:
+            continue
 
-                line_str = ",".join(row)
-                if "Employee Received Detail" in line_str or "Employee Service Detail" in line_str or 'Grand Total' in line_str:
-                    continue
+        qty = parsed.get('qty')
+        # Exclude reversed/void entries (<= 0)
+        if qty is None or qty <= 0:
+            continue
 
-                # Detect a row containing only the stylist name
-                if len(row) == 1 or (len(row) > 0 and row[0].strip() and not any(cell.strip() for cell in row[1:])):
-                    potential_name = row[0].strip()
-                    if potential_name and not potential_name.startswith('#'):
-                        current_stylist = potential_name
-                    continue
+        raw_item_name = parsed.get('item_name', '').strip()
+        dept, short_name = stylist_manager.get_info(current_stylist)
+        sales_val = max(0.0, parsed.get('nett', 0.0))
 
-                # Skip header/total rows
-                if row[0] == '#' or 'Total' in row or row[0] == 'Date':
-                    continue
+        # Exclude specified vouchers/redemptions from Qty calculation
+        item_code = raw_item_name.split(':')[0].strip().upper()
+        if item_code not in QTY_EXCLUDED_CODES:
+            totals[dept][short_name]['qty'] += qty
 
-                parsed = parse_sales_row(row)
-                if not parsed or not current_stylist:
-                    continue
-
-                sale_type = parsed.get('sale_type')
-                if not sale_type or sale_type.strip().upper() not in {'C', 'G'}:
-                    continue
-
-                qty = parsed.get('qty')
-                # Exclude reversed/void entries (<= 0)
-                if qty is None or qty <= 0:
-                    continue
-
-                raw_item_name = parsed.get('item_name', '').strip()
-                dept, short_name = stylist_manager.get_info(current_stylist)
-                sales_val = max(0.0, parsed.get('nett', 0.0))
-
-                # Exclude specified vouchers/redemptions from Qty calculation
-                item_code = raw_item_name.split(':')[0].strip().upper()
-                if item_code not in QTY_EXCLUDED_CODES:
-                    totals[dept][short_name]['qty'] += qty
-
-                totals[dept][short_name]['sales'] += sales_val
+        totals[dept][short_name]['sales'] += sales_val
+        record_count += 1
 
     # Ensure all stylists from groups are present so zeros show up
     for dept, stylists in STYLIST_GROUPS.items():
@@ -82,57 +60,60 @@ def process_package_totals(input_dir=INPUT_DIR, output_file=OUTPUT_FILE):
 
     # Write CSV output
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
-    with open(output_file, mode='w', encoding='utf-8', newline='') as f:
-        writer = csv.writer(f)
+    try:
+        with open(output_file, mode='w', encoding='utf-8', newline='') as f:
+            writer = csv.writer(f)
 
-        writer.writerow(["FINAL CONSOLIDATED (C + G, Qty 1)"])
+            writer.writerow(["FINAL CONSOLIDATED (C + G, Qty 1)"])
 
-        grand_total_qty = 0
-        grand_total_sales = 0.0
+            grand_total_qty = 0
+            grand_total_sales = 0.0
 
-        # For each department, sort stylists by sales desc and write ranking
-        for dept in ['HS', 'Nails', 'L&A']:
-            dept_data = totals.get(dept, {})
-            if not dept_data:
-                continue
+            # For each department, sort stylists by sales desc and write ranking
+            for dept in ['HS', 'Nails', 'L&A']:
+                dept_data = totals.get(dept, {})
+                if not dept_data:
+                    continue
 
-            # Sort by sales descending
-            sorted_stylists = sorted(dept_data.items(), key=lambda x: x[1]['sales'], reverse=True)
+                # Sort by sales descending
+                sorted_stylists = sorted(dept_data.items(), key=lambda x: x[1]['sales'], reverse=True)
 
+                writer.writerow([])
+                writer.writerow([f"Department: {dept}"])
+                writer.writerow(["Rank", "Employee", "Qty", "Sales (RM)"])
+
+                rank = 1
+                dept_qty = 0
+                dept_sales = 0.0
+                for name, vals in sorted_stylists:
+                    writer.writerow([rank, name, vals['qty'], f"RM{vals['sales']:.2f}"])
+                    dept_qty += vals['qty']
+                    dept_sales += vals['sales']
+                    grand_total_qty += vals['qty']
+                    grand_total_sales += vals['sales']
+                    rank += 1
+
+                # Department-level totals
+                writer.writerow([])
+                writer.writerow([f"Totals ({dept})"])
+                writer.writerow([f"Total Qty: {dept_qty}"])
+                writer.writerow([f"Total Sales: RM{dept_sales:.2f}"])
+
+            # Grand combined totals across all departments
             writer.writerow([])
-            writer.writerow([f"Department: {dept}"])
-            writer.writerow(["Rank", "Employee", "Qty", "Sales (RM)"])
+            writer.writerow(["Totals (Combined)"])
+            writer.writerow([f"Total Qty: {grand_total_qty}"])
+            writer.writerow([f"Total Sales: RM{grand_total_sales:.2f}"])
 
-            rank = 1
-            dept_qty = 0
-            dept_sales = 0.0
-            for name, vals in sorted_stylists:
-                writer.writerow([rank, name, vals['qty'], f"RM{vals['sales']:.2f}"])
-                dept_qty += vals['qty']
-                dept_sales += vals['sales']
-                grand_total_qty += vals['qty']
-                grand_total_sales += vals['sales']
-                rank += 1
+    except PermissionError:
+        print(f"\n[ERROR] Permission denied when writing to '{output_file}'.")
+        print("Please close the file in Microsoft Excel or any other program and try again.\n")
+        sys.exit(1)
 
-            # Department-level totals
-            writer.writerow([])
-            writer.writerow([f"Totals ({dept})"])
-            writer.writerow([f"Total Qty: {dept_qty}"])
-            writer.writerow([f"Total Sales: RM{dept_sales:.2f}"])
-
-        # Grand combined totals across all departments
-        writer.writerow([])
-        writer.writerow(["Totals (Combined)"])
-        writer.writerow([f"Total Qty: {grand_total_qty}"])
-        writer.writerow([f"Total Sales: RM{grand_total_sales:.2f}"])
-
-    print(f"Package consolidated report written to {output_file}")
+    print(f"Package consolidated report written to {output_file} ({record_count} package items parsed).")
 
 
 if __name__ == '__main__':
-    import sys
-
-    # Allow overriding input/output paths from the command line
     # Usage: py reports\package_consolidated.py [input_dir] [output_file]
     in_dir = INPUT_DIR
     out_file = OUTPUT_FILE

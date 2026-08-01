@@ -8,5 +8,6 @@ Reading Order:
 2. '/context/architecture.md'
 3. '/context/code-standards.md'
 4. '/context/ai-workflow-rules.md'
+5. '/context/sales-rules.md'
 
 Once you have read these files, acknowledge that you understand.
