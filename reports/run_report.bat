@@ -74,7 +74,7 @@ if "%PYTHON_CMD%"=="" (
 
 if %errorlevel% neq 0 (
     echo(
-    echo [ERROR] Report generation failed (Exit code: %errorlevel%).
+    echo [ERROR] Report generation failed [Exit code: %errorlevel%].
     echo(
     pause
     exit /b %errorlevel%

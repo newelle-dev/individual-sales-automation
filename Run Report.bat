@@ -25,8 +25,8 @@ if errorlevel 1 (
     echo.
     dir /b "input\*.xlsx" "input\*.xls" >nul 2>&1
     if not errorlevel 1 (
-        echo [WARNING] Found Excel files (.xlsx/.xls) in 'input\'.
-        echo Wessconnect exports must be saved/exported in CSV format (.csv).
+        echo [WARNING] Found Excel files [.xlsx/.xls] in 'input\'.
+        echo Wessconnect exports must be saved/exported in CSV format [.csv].
         echo.
     )
     pause
@@ -40,7 +40,7 @@ set PYTHON_CMD=
 
 if exist ".venv\Scripts\python.exe" (
     set PYTHON_CMD=.venv\Scripts\python.exe
-    echo Using virtual environment Python (.venv)...
+    echo Using virtual environment Python [.venv]...
 ) else (
     where py >nul 2>&1
     if !errorlevel!==0 (
