@@ -29,10 +29,11 @@ DEPT_OTHER = 'Other'
 STYLIST_GROUPS: Dict[str, List[str]] = {
     DEPT_HS: [
         'Nick', 'Sven', 'Yin Voon Hao', 'Steve', 'Phillip', 'Hellen', 'Tyra', 'Nicholas', 'Mayble', 
-        'Kenny', 'Jade', 'Wei Xin', 'Kelvin', 'Gino', 'Moon', 'Daniel', 'Ella', 'Sedra', 'Rain', 'Carmen'
+        'Kenny', 'Jade', 'Wei Xin', 'Kelvin', 'Gino', 'Moon', 'Daniel', 'Ella', 'Sedra', 'Rain', 'Carmen',
+        'Maw Maw', 'William', 'Negin', 'Yuri', 'Zom'
     ],
     DEPT_NAILS: [
-        'JEE', 'JESSY', 'ROI ROI', 'GRACE', 'JAY', 'JINGWEN', 'AGNES', 'Sharon'
+        'JEE', 'JESSY', 'ROI ROI', 'GRACE', 'JAY', 'JINGWEN', 'AGNES', 'Sharon', 'Ying'
     ],
     DEPT_LA: [
         'DAISY', 'ALICE', 'YY', 'MOEMOE', 'WINNIE', 'NINI', 'ANGELA', 'JESSIE', 'NAOMI'

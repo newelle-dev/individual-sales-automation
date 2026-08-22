@@ -7,8 +7,8 @@ This document outlines the business logic, categorization rules, and exceptions 
 ## 1. Departmental Groupings
 Stylists are dynamically categorized into three main departments based on their canonical name:
 
-*   **HS (Hair Stylists)**: `Nick`, `Sven`, `Yin Voon Hao`, `Steve`, `Phillip`, `Hellen`, `Tyra`, `Nicholas`, `Mayble`, `Kenny`, `Jade`, `Wei Xin`, `Kelvin`, `Gino`, `Moon`, `Daniel`, `Ella`, `Sedra`, `Rain`, `Carmen`.
-*   **Nails**: `JEE`, `JESSY`, `ROI ROI`, `GRACE`, `JAY`, `JINGWEN`, `AGNES`, `Sharon`.
+*   **HS (Hair Stylists)**: `Nick`, `Sven`, `Yin Voon Hao`, `Steve`, `Phillip`, `Hellen`, `Tyra`, `Nicholas`, `Mayble`, `Kenny`, `Jade`, `Wei Xin`, `Kelvin`, `Gino`, `Moon`, `Daniel`, `Ella`, `Sedra`, `Rain`, `Carmen`, `Maw Maw`, `William`, `Negin`, `Yuri`, `Zom`.
+*   **Nails**: `JEE`, `JESSY`, `ROI ROI`, `GRACE`, `JAY`, `JINGWEN`, `AGNES`, `Sharon`, `Ying`.
 *   **L&A (Lash & Aesthetic)**: `DAISY`, `ALICE`, `YY`, `MOEMOE`, `WINNIE`, `NINI`, `ANGELA`, `JESSIE`, `NAOMI`.
 
 > [!NOTE]
