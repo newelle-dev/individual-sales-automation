@@ -43,6 +43,7 @@ STYLIST_GROUPS: Dict[str, List[str]] = {
 # Known name aliases mapping cleaned string -> (Department, Canonical Name)
 DEFAULT_ALIASES: Dict[str, Tuple[str, str]] = {
     'nicky': (DEPT_HS, 'Yin Voon Hao'),
+    'yin(seniormanicurist)': (DEPT_NAILS, 'Ying'),
 }
 
 # Supported Date Format Patterns for Wessconnect exports

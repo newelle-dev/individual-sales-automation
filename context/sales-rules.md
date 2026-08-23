@@ -22,6 +22,7 @@ To handle name variations and spelling discrepancies in Wessconnect exports:
 2.  **Lookup Precedence**: The system matches names against the canonical list using a longest-matching-substring strategy first to prevent shorter names from causing incorrect matches on longer names.
 3.  **Specific Aliases**:
     *   Any name containing `"nicky"` (case-insensitive, e.g., `"Nicky"`, `"nicky"`, `"Nicky Chen"`) is mapped to **Yin Voon Hao** (`HS`).
+    *   Any name containing `"Yin (Senior Manicurist)"` (case-insensitive) is mapped to **Ying** (`Nails`), distinct from **Yin Voon Hao** (`HS`).
 4.  **Fallback**: Any employee name that cannot be mapped to the predefined groups falls into the **Other** department, preserving their raw name.
 
 ---
