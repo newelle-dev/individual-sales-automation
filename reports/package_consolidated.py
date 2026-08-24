@@ -34,6 +34,12 @@ def process_package_totals(input_dir: str = INPUT_DIR, output_file: str = OUTPUT
         'treatment_qty': 0,
         'treatment_sales': 0.0
     }))
+    overall_data = defaultdict(lambda: {
+        'credit_qty': 0,
+        'credit_sales': 0.0,
+        'treatment_qty': 0,
+        'treatment_sales': 0.0
+    })
 
     # Store datetime per month key for chronological sorting
     month_sort_keys = {}
@@ -73,9 +79,13 @@ def process_package_totals(input_dir: str = INPUT_DIR, output_file: str = OUTPUT
         if sale_type_code == 'C':
             month_data[month_str][short_name]['credit_qty'] += add_qty
             month_data[month_str][short_name]['credit_sales'] += sales_val
+            overall_data[short_name]['credit_qty'] += add_qty
+            overall_data[short_name]['credit_sales'] += sales_val
         elif sale_type_code == 'G':
             month_data[month_str][short_name]['treatment_qty'] += add_qty
             month_data[month_str][short_name]['treatment_sales'] += sales_val
+            overall_data[short_name]['treatment_qty'] += add_qty
+            overall_data[short_name]['treatment_sales'] += sales_val
 
         record_count += 1
 
@@ -100,25 +110,66 @@ def process_package_totals(input_dir: str = INPUT_DIR, output_file: str = OUTPUT
         with open(output_file, mode='w', encoding='utf-8', newline='') as f:
             writer = csv.writer(f)
 
-            writer.writerow(["HS DEPARTMENT MONTHLY PACKAGE REPORT - TOP 7 (CREDIT vs TREATMENT)"])
+            writer.writerow(["HS DEPARTMENT MONTHLY PACKAGE REPORT"])
 
-            grand_credit_qty = 0
-            grand_credit_sales = 0.0
-            grand_treatment_qty = 0
-            grand_treatment_sales = 0.0
-
+            # Monthly matrix: each month combines credit and treatment packages.
+            month_header = ["Staff Name"]
+            metric_header = [""]
             for month_str in sorted_months:
-                stylists_dict = month_data[month_str]
+                month_header.extend([month_str.title(), ""])
+                metric_header.extend(["QTY", "Amount"])
+            month_header.extend(["Total", "Total"])
+            metric_header.extend(["QTY Pkg Sales", "Amt Pkg Sales"])
+            writer.writerow(month_header)
+            writer.writerow(metric_header)
 
-                # Sort stylists by total sales desc, then name asc, and take Top 7
-                sorted_stylists = sorted(
-                    stylists_dict.items(),
-                    key=lambda x: (x[1]['credit_sales'] + x[1]['treatment_sales'], x[0]),
-                    reverse=True
-                )[:7]
+            top_staff = sorted(
+                hs_stylists,
+                key=lambda staff_name: (
+                    -(overall_data[staff_name]['credit_sales'] + overall_data[staff_name]['treatment_sales']),
+                    staff_name
+                )
+            )[:7]
+            for staff_name in top_staff:
+                row = [staff_name]
+                total_qty = 0
+                total_sales = 0.0
+                for month_str in sorted_months:
+                    vals = month_data[month_str][staff_name]
+                    month_qty = vals['credit_qty'] + vals['treatment_qty']
+                    month_sales = vals['credit_sales'] + vals['treatment_sales']
+                    row.extend([
+                        int(month_qty) if isinstance(month_qty, float) and month_qty.is_integer() else month_qty,
+                        f"RM{month_sales:.2f}"
+                    ])
+                    total_qty += month_qty
+                    total_sales += month_sales
+                row.extend([
+                    int(total_qty) if isinstance(total_qty, float) and total_qty.is_integer() else total_qty,
+                    f"RM{total_sales:.2f}"
+                ])
+                writer.writerow(row)
+
+            # Overall top 7 rankings across all recorded months.
+            overall_sections = [
+                ("Credit Packages", "credit_sales"),
+                ("Treatment Packages", "treatment_sales"),
+                ("Combined Packages", "total_sales")
+            ]
+            for section_name, sales_key in overall_sections:
+                if sales_key == 'total_sales':
+                    ranked_stylists = sorted(
+                        overall_data.items(),
+                        key=lambda x: (-(x[1]['credit_sales'] + x[1]['treatment_sales']), x[0])
+                    )[:7]
+                else:
+                    ranked_stylists = sorted(
+                        overall_data.items(),
+                        key=lambda x: (-x[1][sales_key], x[0])
+                    )[:7]
 
                 writer.writerow([])
-                writer.writerow([f"Month: {month_str} (Department: HS - Top 7)"])
+                writer.writerow([f"Overall Top 7 - {section_name} (All Months)"])
                 writer.writerow([
                     "Rank", "Employee",
                     "Credit Pkg Qty", "Credit Pkg Sales (RM)",
@@ -126,73 +177,23 @@ def process_package_totals(input_dir: str = INPUT_DIR, output_file: str = OUTPUT
                     "Total Qty", "Total Sales (RM)"
                 ])
 
-                rank = 1
-                month_credit_qty = 0
-                month_credit_sales = 0.0
-                month_treatment_qty = 0
-                month_treatment_sales = 0.0
-
-                for name, vals in sorted_stylists:
-                    cq = vals['credit_qty']
-                    cs = vals['credit_sales']
-                    tq = vals['treatment_qty']
-                    ts = vals['treatment_sales']
-                    tot_q = cq + tq
-                    tot_s = cs + ts
-
+                for rank, (name, vals) in enumerate(ranked_stylists, start=1):
+                    credit_qty = vals['credit_qty']
+                    credit_sales = vals['credit_sales']
+                    treatment_qty = vals['treatment_qty']
+                    treatment_sales = vals['treatment_sales']
+                    total_qty = credit_qty + treatment_qty
+                    total_sales = credit_sales + treatment_sales
                     writer.writerow([
                         rank,
                         name,
-                        int(cq) if isinstance(cq, float) and cq.is_integer() else cq,
-                        f"RM{cs:.2f}",
-                        int(tq) if isinstance(tq, float) and tq.is_integer() else tq,
-                        f"RM{ts:.2f}",
-                        int(tot_q) if isinstance(tot_q, float) and tot_q.is_integer() else tot_q,
-                        f"RM{tot_s:.2f}"
+                        int(credit_qty) if isinstance(credit_qty, float) and credit_qty.is_integer() else credit_qty,
+                        f"RM{credit_sales:.2f}",
+                        int(treatment_qty) if isinstance(treatment_qty, float) and treatment_qty.is_integer() else treatment_qty,
+                        f"RM{treatment_sales:.2f}",
+                        int(total_qty) if isinstance(total_qty, float) and total_qty.is_integer() else total_qty,
+                        f"RM{total_sales:.2f}"
                     ])
-
-                    month_credit_qty += cq
-                    month_credit_sales += cs
-                    month_treatment_qty += tq
-                    month_treatment_sales += ts
-                    rank += 1
-
-                month_tot_qty = month_credit_qty + month_treatment_qty
-                month_tot_sales = month_credit_sales + month_treatment_sales
-
-                grand_credit_qty += month_credit_qty
-                grand_credit_sales += month_credit_sales
-                grand_treatment_qty += month_treatment_qty
-                grand_treatment_sales += month_treatment_sales
-
-                # Month-level totals
-                writer.writerow([])
-                writer.writerow([f"Totals ({month_str} - Top 7)"])
-                writer.writerow([
-                    "Total", "Top 7 HS Stylists",
-                    int(month_credit_qty) if isinstance(month_credit_qty, float) and month_credit_qty.is_integer() else month_credit_qty,
-                    f"RM{month_credit_sales:.2f}",
-                    int(month_treatment_qty) if isinstance(month_treatment_qty, float) and month_treatment_qty.is_integer() else month_treatment_qty,
-                    f"RM{month_treatment_sales:.2f}",
-                    int(month_tot_qty) if isinstance(month_tot_qty, float) and month_tot_qty.is_integer() else month_tot_qty,
-                    f"RM{month_tot_sales:.2f}"
-                ])
-
-            # Grand combined totals across all months (if multiple)
-            if len(sorted_months) > 1:
-                grand_tot_qty = grand_credit_qty + grand_treatment_qty
-                grand_tot_sales = grand_credit_sales + grand_treatment_sales
-                writer.writerow([])
-                writer.writerow(["Grand Totals (All Months)"])
-                writer.writerow([
-                    "Total", "Combined",
-                    int(grand_credit_qty) if isinstance(grand_credit_qty, float) and grand_credit_qty.is_integer() else grand_credit_qty,
-                    f"RM{grand_credit_sales:.2f}",
-                    int(grand_treatment_qty) if isinstance(grand_treatment_qty, float) and grand_treatment_qty.is_integer() else grand_treatment_qty,
-                    f"RM{grand_treatment_sales:.2f}",
-                    int(grand_tot_qty) if isinstance(grand_tot_qty, float) and grand_tot_qty.is_integer() else grand_tot_qty,
-                    f"RM{grand_tot_sales:.2f}"
-                ])
 
     except PermissionError:
         print(f"\n[ERROR] Permission denied when writing to '{output_file}'.")
